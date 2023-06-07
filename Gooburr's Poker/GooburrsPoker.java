@@ -7,6 +7,7 @@ public class GooburrsPoker{
 	static int intDeck[][] = new int[52][3];
 	static BufferedImage imgBG;
 	static BufferedImage imgCards[] = new BufferedImage[5];
+	static boolean blnCardsSwap[] = new boolean[5];
 	public static void main(String[] args){
 		
 		int intTotalCount = 0;
@@ -19,9 +20,35 @@ public class GooburrsPoker{
 			}
 		}
 		sortDeck();
-		imgBG = con.loadImage("PokerBG.jpg");
-		con.drawImage(imgBG,0,0);
-		con.repaint();
+		boolean blnRedraw = true;
+		imgBG = con.loadImage("images/PokerBG.jpg");
+		for(int intCount = 0; intCount < 5; intCount++){
+			imgCards[intCount] = con.loadImage("images/cards/"+intDeck[intCount][0]+"_"+intDeck[intCount][1]+".png");
+			blnCardsSwap[intCount] = false;
+		}
+		while(!clickButton(420,570,480,110)){
+			for(int intCount = 0; intCount < 5; intCount++){
+				if(clickButton((intCount+1)*120+250,420,71,96) && !blnCardsSwap[intCount]){
+					blnCardsSwap[intCount] = !blnCardsSwap[intCount];
+					blnRedraw = true;
+				}else if(clickButton((intCount+1)*120+250,240,71,96) && blnCardsSwap[intCount]){
+					blnCardsSwap[intCount] = !blnCardsSwap[intCount];
+					blnRedraw = true;
+				}
+			}
+			if(blnRedraw){
+				con.drawImage(imgBG,0,0);
+				for(int intCount = 0; intCount < 5; intCount++){
+					if(!blnCardsSwap[intCount]){
+						con.drawImage(imgCards[intCount],(intCount+1)*120+250,420);
+					}else{
+						con.drawImage(imgCards[intCount],(intCount+1)*120+250,240);
+					}
+				}
+				con.repaint();
+				blnRedraw = false;
+			}
+		}
 	}
 	public static void sortDeck(){
 		int intTemp;
@@ -44,5 +71,8 @@ public class GooburrsPoker{
 				}
 			}
 		}
+	}
+	public static boolean clickButton(int intPosX, int intPosY, int intWidth, int intHeight){
+		return con.currentMouseButton() == 1 && con.currentMouseX() >= intPosX && con.currentMouseX() <= intPosX + intWidth && con.currentMouseY() >= intPosY && con.currentMouseY() <= intPosY + intHeight;
 	}
 }
