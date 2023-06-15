@@ -91,26 +91,17 @@ public class GooburrsPoker{
 	
 		//set the draw color for the hover button outline
 		con.setDrawColor(Color.YELLOW);
+		//set images for the card states (IE pair, full house, etc)
+		BufferedImage imgState;
+		//load the money image and array for their positions for the straight flush animation
+		BufferedImage imgMoney = con.loadImage("images/states/money.png");
+		int intMoneyX[] = new int[50];
+		int intMoneyY[] = new int[50];
 		//main gameplay loop
 		while(blnPlaying){
 			blnRedraw = true;
-			//THE NEXT 12 LINES ARE FOR TESTING
-			/*
-			intHand[0][0] = 2;
-			intHand[0][1] = 0;
-			intHand[1][0] = 2;
-			intHand[1][1] = 3;
-			intHand[2][0] = 2;
-			intHand[2][1] = 1;
-			intHand[3][0] = 2;
-			intHand[3][1] = 2;
-			intHand[4][0] = 4;
-			intHand[4][1] = 1;
-			*/ 
 			//hand is set up
 			for(int intCount = 0; intCount < 5; intCount++){
-				intHand[intCount][0] = intDeck[intCount][0];
-				intHand[intCount][1] = intDeck[intCount][1];
 				imgCards[intCount] = con.loadImage("images/cards/"+intHand[intCount][0]+"_"+intHand[intCount][1]+".png");
 				blnCardsSwap[intCount] = false;
 			}
@@ -138,11 +129,7 @@ public class GooburrsPoker{
 					}
 				}
 				//Imma just be real w/ u there's prolly an easier way to do this whole check but I'm too lazy to figure it out and this works ¯\_(ツ)_/¯
-				if(!hoverButton((1)*120+250,240,71,96) &&  !hoverButton((2)*120+250,240,71,96) && 
-				!hoverButton((3)*120+250,240,71,96) && !hoverButton((4)*120+250,240,71,96) && !hoverButton((5)*120+250,240,71,96) && 
-				!hoverButton((1)*120+250,420,71,96) && !hoverButton((2)*120+250,420,71,96) &&
-				!hoverButton((3)*120+250,420,71,96) && !hoverButton((4)*120+250,420,71,96) && !hoverButton((5)*120+250,420,71,96) &&
-				!hoverButton(420,570,480,110) && intHover != 0){
+				if(!hoverButton((1)*120+250,240,71,96) &&  !hoverButton((2)*120+250,240,71,96) && !hoverButton((3)*120+250,240,71,96) && !hoverButton((4)*120+250,240,71,96) && !hoverButton((5)*120+250,240,71,96) && !hoverButton((1)*120+250,420,71,96) && !hoverButton((2)*120+250,420,71,96) && !hoverButton((3)*120+250,420,71,96) && !hoverButton((4)*120+250,420,71,96) && !hoverButton((5)*120+250,420,71,96) && !hoverButton(420,570,480,110) && intHover != 0){
 					intHover = 0;
 					blnRedraw = true;
 				}
@@ -193,42 +180,107 @@ public class GooburrsPoker{
 			//check which state the deck is in, and give the appropriate amount of money to the player
 			System.out.println("pair: "+pair()+" two pairs: "+twoPairs()+" 3OAK: "+threeOAK()+" straight: "+straight()+" flush: "+flush()+" full house: "+fullHouse()+" 4OAK: "+fourOAK()+" straight flush: "+straightFlush());
 			con.clear();
+			con.sleep(3000);
 			if(straightFlush()){
 				con.println("straight flush!!");
 				intBet *= 50;
 				intMoney += intBet;
+				imgState = con.loadImage("images/states/straight flush.png");
+				for(int intCount = 0; intCount <= 49; intCount++){
+					intMoneyX[intCount] = (int)(Math.random()*1180);
+					intMoneyY[intCount] = (int)(Math.random()*(-72)-5)*10;
+				}
+				for(int intCount = 1; intCount <= 400; intCount++){
+					con.drawImage(imgBG,0,0);
+					con.drawImage(imgState,(int)(Math.random()*40-20),(int)(Math.random()*40-20));
+					for(int intCount2 = 1; intCount2 <= 49; intCount2++){
+						intMoneyY[intCount2] += 10;
+						if(intMoneyY[intCount2] >= 720){
+							intMoneyX[intCount2] = (int)(Math.random()*1180);
+							intMoneyY[intCount2] = -50;
+						}
+						con.drawImage(imgMoney,intMoneyX[intCount2],intMoneyY[intCount2]);
+					}
+					con.repaint();
+					con.sleep(33);
+				}
 			}else if(fourOAK()){
-				con.println("four of a kind!");
 				intBet *= 25;
 				intMoney += intBet;
+				imgState = con.loadImage("images/states/four.png");
+				for(int intCount = 1; intCount <= 200; intCount++){
+					con.drawImage(imgBG,0,0);
+					con.drawImage(imgState,(int)(Math.random()*40+120),(int)(Math.random()*40-20));
+					con.repaint();
+					con.sleep(33);
+				}
 			}else if(fullHouse()){
-				con.println("full house!");
 				intBet *= 9;
 				intMoney += intBet;
+				imgState = con.loadImage("images/states/full house.png");
+				for(int intCount = 1; intCount <= 200; intCount++){
+					con.drawImage(imgBG,0,0);
+					con.drawImage(imgState,(int)(Math.random()*20+180),0);
+					con.repaint();
+					con.sleep(33);
+				}
 			}else if(flush()){
-				con.println("flush!");
 				intBet *= 6;
 				intMoney += intBet;
+				imgState = con.loadImage("images/states/flush.png");
+				for(int intCount = 150; intCount >= 0; intCount--){
+					con.drawImage(imgBG,0,0);
+					con.drawImage(imgState,(int)(5*intCount*Math.sin((Math.PI*intCount)/50)) + 190,(int)(5*intCount*Math.cos((Math.PI*intCount)/50)) + 60);
+					con.repaint();
+					con.sleep(33);
+				}
+				con.sleep(2000);
 			}else if(straight()){
-				con.println("straight!");
 				intBet *= 4;
 				intMoney += intBet;
+				imgState = con.loadImage("images/states/straight.png");
+				for(int intCount = -800; intCount <= 240; intCount += 10){
+					con.drawImage(imgBG,0,0);
+					con.drawImage(imgState,intCount,60);
+					con.repaint();
+					con.sleep(33);
+				}
+				con.sleep(1000);
+				for(int intCount = 240; intCount <= 1280; intCount += 10){
+					con.drawImage(imgBG,0,0);
+					con.drawImage(imgState,intCount,60);
+					con.repaint();
+					con.sleep(33);
+				}
 			}else if(threeOAK()){
-				con.println("three of a kind!");
 				intBet *= 3;
 				intMoney += intBet;
+				imgState = con.loadImage("images/states/three.png");
+				con.drawImage(imgState,240,110);
+				con.repaint();
+				con.sleep(5000);
 			}else if(twoPairs()){
-				con.println("two pairs!");
 				intBet *= 2;
 				intMoney += intBet;
+				imgState = con.loadImage("images/states/two pair.png");
+				con.drawImage(imgState,290,70);
+				con.repaint();
+				con.sleep(5000);
 			}else if(pair()){
-				con.println("pair!");
 				intMoney += intBet;
+				imgState = con.loadImage("images/states/pair.png");
+				con.drawImage(imgState,290,160);
+				con.repaint();
+				con.sleep(5000);
 			}else{
-				con.println("nothing...");
+				imgState = con.loadImage("images/states/nothin.png");
+				con.drawImage(imgState,290,210);
+				con.repaint();
+				con.sleep(5000);
 			}
-			con.sleep(2000);
 			con.clear();
+			con.drawImage(imgBG,0,0);
+			con.repaint();
 			//check if the player wishes to play again
 			if(intMoney != 0){
 				con.println("Name: "+strName);
