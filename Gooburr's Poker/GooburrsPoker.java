@@ -85,7 +85,6 @@ public class GooburrsPoker{
 		//variables are set up for the main gameplay loop
 		boolean blnPlaying = true;
 		boolean blnRedraw;
-		String strInput;
 		//intHovering shows what the player is hovering on, 0 is nothing, 1-5 are the respective non-swap pile cards, 6-10 are the respective swap pile cards, 11 is ready button
 		int intHover = 0;
 	
@@ -102,6 +101,8 @@ public class GooburrsPoker{
 			blnRedraw = true;
 			//hand is set up
 			for(int intCount = 0; intCount < 5; intCount++){
+				intHand[intCount][0] = intDeck[intCount][0];
+				intHand[intCount][1] = intDeck[intCount][1];
 				imgCards[intCount] = con.loadImage("images/cards/"+intHand[intCount][0]+"_"+intHand[intCount][1]+".png");
 				blnCardsSwap[intCount] = false;
 			}
@@ -281,99 +282,118 @@ public class GooburrsPoker{
 			con.clear();
 			con.drawImage(imgBG,0,0);
 			con.repaint();
-			//check if the player wishes to play again
+			//check if the player wishes to play again, and if they're out of money
 			if(intMoney != 0){
 				con.println("Name: "+strName);
 				con.println("Money: $"+intMoney);
-				con.print("Type \"play\" to play again, type anything else to quit and save your score: ");
-				strInput = con.readLine();
-				con.clear();
+				con.println("Press 'p' to play again, press 'q' to quit and save your score");
+				//set chrInput to a default value so it isn't 'p' and the while loop actually runs
+				chrInput = ' ';
 			}else{
-				con.println("You're broke! you can't play anymore!");
-				strInput = "not play";
+				BufferedImage imgOutOfCash = con.loadImage("images/out of cash.png");
+				con.drawImage(imgOutOfCash,0,0);
+				con.repaint();
+				blnPlaying = false;
 			}
-			//run if the player wishes to play again
-			if(strInput.equalsIgnoreCase("play")){
-				//shuffle the deck
-				for(int intCount = 0; intCount < 52; intCount++){
-					intDeck[intCount][2] = (int)(Math.random()*100.0 + 1.0);
-				}
-				sortDeck();
-				//ask for the player's bet
-				intBet = 99999999;
-				while(intBet > intMoney || intBet <= 0){
+			while(chrInput != 'p' && blnPlaying){
+				//set the input variable to the key the player is pressing
+				chrInput = con.getChar();
+				//run if the player wishes to play again (they press 'p' to do so)
+				if(chrInput == 'p' && blnPlaying){
+					//clear the console
+					con.clear();
+					//shuffle the deck
+					for(int intCount = 0; intCount < 52; intCount++){
+						intDeck[intCount][2] = (int)(Math.random()*100.0 + 1.0);
+					}
+					sortDeck();
+					//ask for the player's bet
+					intBet = 99999999;
+					while(intBet > intMoney || intBet <= 0){
+						con.println("Name: "+strName);
+						con.println("Money: $"+intMoney);
+						con.print("Input your bet: $");
+						intBet = con.readInt();
+						con.clear();
+						if(intBet > intMoney){
+							con.println("HEY! You can't bet more money than you acually have!");
+						}
+						if(intBet < 0){
+							con.println("HEY! You can't bet a negative amount of money!");
+						}
+						if(intBet == 0){
+							con.println("HEY! You can't bet nothing!");
+						}
+					}
+					intMoney -= intBet;
 					con.println("Name: "+strName);
 					con.println("Money: $"+intMoney);
-					con.print("Input your bet: $");
-					intBet = con.readInt();
+					con.println("Bet: $"+intBet);
+					con.drawImage(imgBG,0,0);
+					//set up and draw the player's hand
+					for(int intCount = 0; intCount < 5; intCount++){
+						imgCards[intCount] = con.loadImage("images/cards/back.png");
+						con.drawImage(imgCards[intCount],(intCount+1)*120+250,420);
+					}
+					//since there is a while loop for the game, and blnPlaying is true, the loop will restart and the player can play again
+				//if the player doesn't wish to play again (they press 'q' to do so)
+				}else if(chrInput == 'q' && blnPlaying){
+					//clear the console
 					con.clear();
-					if(intBet > intMoney){
-						con.println("HEY! You can't bet more money than you acually have!");
+					//set up variables related to saving the player's score
+					TextInputFile txtScoresInput = new TextInputFile("scores.txt");
+					TextOutputFile txtScoresOutput = new TextOutputFile("scores.txt");
+					String strNames[] = new String[25];
+					int intScores[] = new int[25];
+					intTotalCount = 0;
+					int intScoresCount;
+					//set the strNames and intScores array to the scores listed in scores.txt
+					while(!txtScoresInput.eof() && intTotalCount < 25){
+						strNames[intTotalCount] = txtScoresInput.readLine();
+						intScores[intTotalCount] = txtScoresInput.readInt();
+						intTotalCount++;
 					}
-					if(intBet < 0){
-						con.println("HEY! You can't bet a negative amount of money!");
+					intScoresCount = intTotalCount;
+					System.out.println("scores count: "+intScoresCount);
+					//if there's no scores, just print out the player's current score
+					if(intScoresCount == 0){
+						txtScoresOutput.println(strName);
+						txtScoresOutput.println(intMoney);
+					//else, if the players score is bigger than the last score, insert it in where it belongs, scores are ranked from highest score to lowest
+					}else if(intMoney > intScores[intScoresCount]){
+						strNames[intScoresCount] = strName;
+						intScores[intScoresCount] = intMoney;
+						int intTemp;
+						String strTemp;
+						while(intTotalCount >= 1 && intMoney > intScores[intTotalCount-1]){
+							intTemp = intScores[intTotalCount];
+							intScores[intTotalCount] = intScores[intTotalCount-1];
+							intScores[intTotalCount-1] = intTemp;
+							strTemp = strNames[intTotalCount];
+							strNames[intTotalCount] = strNames[intTotalCount-1];
+							strNames[intTotalCount-1] = strTemp;
+							intTotalCount--;
+						}
+						for(int intCount = 0; intCount <= intScoresCount; intCount++){
+							txtScoresOutput.println(strNames[intCount]);
+							txtScoresOutput.println(intScores[intCount]);
+							System.out.println(strNames[intCount]);
+							System.out.println(intScores[intCount]);
+						}
+					}else{
+						strNames[intScoresCount] = strName;
+						intScores[intScoresCount] = intMoney;
+						for(int intCount = 0; intCount <= intScoresCount; intCount++){
+							txtScoresOutput.println(strNames[intCount]);
+							txtScoresOutput.println(intScores[intCount]);
+							System.out.println(strNames[intCount]);
+							System.out.println(intScores[intCount]);
+						}
 					}
-					if(intBet == 0){
-						con.println("HEY! You can't bet nothing!");
-					}
+					//exit the while loop
+					blnPlaying = false;
+					con.println("your score has been saved!");
 				}
-				intMoney -= intBet;
-				con.println("Name: "+strName);
-				con.println("Money: $"+intMoney);
-				con.println("Bet: $"+intBet);
-				con.drawImage(imgBG,0,0);
-				//set up and draw the player's hand
-				for(int intCount = 0; intCount < 5; intCount++){
-					imgCards[intCount] = con.loadImage("images/cards/back.png");
-					con.drawImage(imgCards[intCount],(intCount+1)*120+250,420);
-				}
-				//since we are in a while loop, and blnPlaying is true, the loop will restart
-			//if the player doesn't wish to play again
-			}else{
-				//set up variables related to saving the player's score
-				TextInputFile txtScoresInput = new TextInputFile("scores.txt");
-				TextOutputFile txtScoresOutput = new TextOutputFile("scores.txt");
-				String strNames[] = new String[25];
-				int intScores[] = new int[25];
-				intTotalCount = 0;
-				int intScoresCount;
-				//set the strNames and intScores array to the scores listed in scores.txt
-				while(!txtScoresInput.eof() && intTotalCount < 25){
-					strNames[intTotalCount] = txtScoresInput.readLine();
-					intScores[intTotalCount] = txtScoresInput.readInt();
-					intTotalCount++;
-				}
-				intScoresCount = intTotalCount;
-				System.out.println("scores count: "+intScoresCount);
-				//if there's no scores, just print out the player's current score
-				if(intScoresCount == 0){
-					txtScoresOutput.println(strName);
-					txtScoresOutput.println(intMoney);
-				//else, if the players score is bigger than the last score, insert it in where it belongs, scores are ranked from highest score to lowest
-				}else if(intMoney > intScores[intScoresCount]){
-					strNames[intScoresCount] = strName;
-					intScores[intScoresCount] = intMoney;
-					int intTemp;
-					String strTemp;
-					while(intMoney > intScores[intTotalCount-1] && intTotalCount > 1){
-						intTemp = intScores[intTotalCount];
-						intScores[intTotalCount] = intScores[intTotalCount-1];
-						intScores[intTotalCount-1] = intTemp;
-						strTemp = strNames[intTotalCount];
-						strNames[intTotalCount] = strNames[intTotalCount-1];
-						strNames[intTotalCount-1] = strTemp;
-						intTotalCount--;
-					}
-					for(int intCount = 0; intCount <= intScoresCount; intCount++){
-						txtScoresOutput.println(strNames[intCount]);
-						txtScoresOutput.println(intScores[intCount]);
-						System.out.println(strNames[intCount]);
-						System.out.println(intScores[intCount]);
-					}
-				}
-				//exit the while loop
-				blnPlaying = false;
-				con.println("your score has been saved!");
 			}
 		}
 	}
